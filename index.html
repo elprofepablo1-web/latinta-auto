@@ -2313,14 +2313,26 @@ Ana López"></textarea>
             if (loading) loading.style.display = 'flex';
             
             try {
-                const response = await fetch(AIRTABLE.URL, {
-                    headers: { 'Authorization': `Bearer ${AIRTABLE.TOKEN}` }
-                });
+                let allRecords = [];
+                let offset = null;
                 
-                if (!response.ok) throw new Error('Error ' + response.status);
+                // Cargar TODOS los registros con paginación
+                do {
+                    const url = offset ? `${AIRTABLE.URL}?offset=${offset}` : AIRTABLE.URL;
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${AIRTABLE.TOKEN}` }
+                    });
+                    
+                    if (!response.ok) throw new Error('Error ' + response.status);
+                    
+                    const data = await response.json();
+                    allRecords = allRecords.concat(data.records);
+                    offset = data.offset;
+                    
+                    console.log(`📦 Cargados ${allRecords.length} registros...`);
+                } while (offset);
                 
-                const data = await response.json();
-                allData = data.records.map(r => ({
+                allData = allRecords.map(r => ({
                     _airtableId: r.id,
                     'Unnamed: 0': r.fields.ID || '',
                     'Profesor': r.fields.Profesor || '',
