@@ -1468,136 +1468,162 @@ Ana López"></textarea>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <script>
-        // ========================================
-        // LA TINTA - VERCEL + GOOGLE SHEETS API
-        // ========================================
-        
-        // CONFIGURACIÓN - El usuario debe completar esto
-        const CONFIG = {
-            SPREADSHEET_ID: 'TU_SPREADSHEET_ID_AQUI',  // Cambiar por tu ID
-            API_KEY: 'TU_API_KEY_AQUI',  // Cambiar por tu API Key
-            SHEET_NAME: 'Estudiantes'
-        };
-        
         let allData = [];
-        const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
         
-        // Cargar datos al iniciar
-        window.onload = function() {
-            if (!validarConfiguracion()) {
-                mostrarPanelConfiguracion();
-            } else {
-                cargarDatosDesdeGoogleSheets();
+        // CONFIGURACIÓN AIRTABLE
+        const AIRTABLE = {
+            TOKEN: 'patPOg1IagjNYKYh2.d79fbf036fb36f1f63f09e98f011adb3c555d4ff87aa950e782711956aee0b46',
+            BASE_ID: 'appjNQ0WnoDsi2Kw',
+            TABLE_NAME: 'Estudiantes',
+            get URL() { return `https://api.airtable.com/v0/${this.BASE_ID}/${this.TABLE_NAME}`; },
+            get HEADERS() { 
+                return {
+                    'Authorization': `Bearer ${this.TOKEN}`,
+                    'Content-Type': 'application/json'
+                };
             }
         };
         
-        function validarConfiguracion() {
-            return CONFIG.SPREADSHEET_ID !== '1a5GHoqm38xiWz_Zq97mvajx0lwL5a1sqEJ1-52l-5Ng' && 
-                   CONFIG.API_KEY !== 'AIzaSyAciJJvheIBoYATIKlykKfWcmue_Psul4Q';
-        }
-        
-        function mostrarPanelConfiguracion() {
-            const mensaje = `
-                <div style="max-width: 800px; margin: 50px auto; padding: 40px; background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                    <h2 style="color: #667eea;">⚙️ Configuración Requerida</h2>
-                    <p style="font-size: 16px; line-height: 1.6;">Para usar el sistema, necesitas configurar:</p>
-                    
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h3>1. API Key de Google</h3>
-                        <ol style="line-height: 1.8;">
-                            <li>Ve a: <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
-                            <li>Crea un proyecto nuevo</li>
-                            <li>Habilita "Google Sheets API"</li>
-                            <li>Crea credenciales → API Key</li>
-                            <li>Copia tu API Key</li>
-                        </ol>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h3>2. ID de tu Google Sheet</h3>
-                        <ol style="line-height: 1.8;">
-                            <li>Abre tu Google Sheet</li>
-                            <li>Copia el ID de la URL (entre /d/ y /edit)</li>
-                            <li>Ejemplo: docs.google.com/spreadsheets/d/<strong>ABC123XYZ</strong>/edit</li>
-                        </ol>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h3>3. Configurar en el código</h3>
-                        <p>Edita el archivo <code>index.html</code> y reemplaza:</p>
-                        <pre style="background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto;">
-SPREADSHEET_ID: 'TU_ID_AQUI',
-API_KEY: 'TU_API_KEY_AQUI'</pre>
-                    </div>
-                    
-                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
-                        <strong>⚠️ Importante:</strong> Tu Google Sheet debe estar compartido como "Cualquier persona con el enlace puede ver"
-                    </div>
-                </div>
-            `;
-            document.body.innerHTML = mensaje;
-        }
-        
-        async function cargarDatosDesdeGoogleSheets() {
-            mostrarCargando(true);
+        // CARGAR desde Airtable
+        async function cargarDatosAirtable() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.style.display = 'flex';
             
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${CONFIG.SHEET_NAME}?key=${CONFIG.API_KEY}`;
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error('Error al cargar datos: ' + response.status);
-                }
+                const response = await fetch(AIRTABLE.URL, { headers: AIRTABLE.HEADERS });
+                if (!response.ok) throw new Error('Error ' + response.status);
                 
                 const data = await response.json();
+                allData = data.records.map(r => ({
+                    _airtableId: r.id,
+                    'Unnamed: 0': r.fields.ID || '',
+                    'Profesor': r.fields.Profesor || '',
+                    'Sala': r.fields.Sala || '',
+                    'Nivel': r.fields.Nivel || '',
+                    'TIPO': r.fields.TIPO || '',
+                    'Días': r.fields['Días'] || r.fields.Dias || '',
+                    'Horas': r.fields.Horas || '',
+                    'Alumnos': r.fields.Alumnos || '',
+                    'Confirmado': r.fields.Confirmado || '',
+                    'Pagado': r.fields.Pagado || '',
+                    'E-mail': r.fields['E-mail'] || '',
+                    'Teléfono': r.fields['Teléfono'] || r.fields.Telefono || '',
+                    'Activo': r.fields.Activo || 'SÍ',
+                    'COMENTARIO': r.fields.COMENTARIO || ''
+                }));
                 
-                if (!data.values || data.values.length === 0) {
-                    throw new Error('La hoja está vacía');
-                }
+                console.log(`✅ ${allData.length} registros cargados desde Airtable`);
                 
-                // Convertir de array a objetos
-                const headers = data.values[0];
-                const rows = data.values.slice(1);
-                
-                allData = rows.map(row => {
-                    const obj = {};
-                    headers.forEach((header, index) => {
-                        obj[header] = row[index] || '';
-                    });
-                    return obj;
-                });
-                
-                console.log(`✅ ${allData.length} registros cargados`);
                 initializeApp();
-                mostrarCargando(false);
-                
+                if (loading) loading.style.display = 'none';
             } catch (error) {
                 console.error('Error:', error);
-                mostrarCargando(false);
-                alert('❌ Error al cargar datos: ' + error.message + '\n\nVerifica tu configuración.');
+                if (loading) loading.style.display = 'none';
+                alert('Error al cargar desde Airtable: ' + error.message);
             }
         }
         
-        function mostrarCargando(mostrar) {
-            const loading = document.getElementById('loading');
-            if (loading) {
-                loading.style.display = mostrar ? 'flex' : 'none';
+        // GUARDAR en Airtable
+        async function guardarEnAirtable(estudiante) {
+            try {
+                const airtableData = {
+                    fields: {
+                        'ID': estudiante['Unnamed: 0'],
+                        'Profesor': estudiante.Profesor,
+                        'Sala': estudiante.Sala,
+                        'Nivel': estudiante.Nivel,
+                        'TIPO': estudiante.TIPO,
+                        'Días': estudiante.Días,
+                        'Horas': estudiante.Horas,
+                        'Alumnos': estudiante.Alumnos,
+                        'Confirmado': estudiante.Confirmado || '',
+                        'Pagado': estudiante.Pagado || '',
+                        'E-mail': estudiante['E-mail'] || '',
+                        'Teléfono': estudiante.Teléfono || '',
+                        'Activo': 'SÍ',
+                        'COMENTARIO': estudiante.COMENTARIO || ''
+                    }
+                };
+                
+                const response = await fetch(AIRTABLE.URL, {
+                    method: 'POST',
+                    headers: AIRTABLE.HEADERS,
+                    body: JSON.stringify(airtableData)
+                });
+                
+                if (!response.ok) throw new Error('Error al guardar');
+                
+                console.log('✅ Estudiante guardado en Airtable');
+                await cargarDatosAirtable();
+                return true;
+            } catch (error) {
+                console.error('Error guardando:', error);
+                alert('Error al guardar: ' + error.message);
+                return false;
             }
         }
         
-        async function guardarEnGoogleSheets() {
-            alert('ℹ️ Google Sheets API (solo lectura en versión gratuita)\n\n' +
-                  'Para guardar cambios:\n' +
-                  '1. Click en "💾 Descargar Excel"\n' +
-                  '2. Sube el archivo a Google Drive\n' +
-                  '3. Importa a tu Google Sheet (Archivo → Importar)\n\n' +
-                  'Esto reemplazará los datos anteriores.');
+        // ACTUALIZAR en Airtable
+        async function actualizarEnAirtable(airtableId, estudiante) {
+            try {
+                const airtableData = {
+                    fields: {
+                        'Profesor': estudiante.Profesor,
+                        'Sala': estudiante.Sala,
+                        'Nivel': estudiante.Nivel,
+                        'TIPO': estudiante.TIPO,
+                        'Días': estudiante.Días,
+                        'Horas': estudiante.Horas,
+                        'Alumnos': estudiante.Alumnos,
+                        'Confirmado': estudiante.Confirmado || '',
+                        'Pagado': estudiante.Pagado || '',
+                        'E-mail': estudiante['E-mail'] || '',
+                        'Teléfono': estudiante.Teléfono || '',
+                        'COMENTARIO': estudiante.COMENTARIO || ''
+                    }
+                };
+                
+                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
+                    method: 'PATCH',
+                    headers: AIRTABLE.HEADERS,
+                    body: JSON.stringify(airtableData)
+                });
+                
+                if (!response.ok) throw new Error('Error al actualizar');
+                
+                console.log('✅ Estudiante actualizado en Airtable');
+                await cargarDatosAirtable();
+                return true;
+            } catch (error) {
+                console.error('Error actualizando:', error);
+                alert('Error al actualizar: ' + error.message);
+                return false;
+            }
         }
-
         
+        // ELIMINAR de Airtable
+        async function eliminarDeAirtable(airtableId) {
+            try {
+                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
+                    method: 'DELETE',
+                    headers: AIRTABLE.HEADERS
+                });
+                
+                if (!response.ok) throw new Error('Error al eliminar');
+                
+                console.log('✅ Estudiante eliminado de Airtable');
+                await cargarDatosAirtable();
+                return true;
+            } catch (error) {
+                console.error('Error eliminando:', error);
+                alert('Error al eliminar: ' + error.message);
+                return false;
+            }
+        }
+        
+        // Cargar al iniciar
+        window.addEventListener('load', cargarDatosAirtable)
         
         const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
 
@@ -1608,7 +1634,67 @@ API_KEY: 'TU_API_KEY_AQUI'</pre>
             });
         }
 
-        
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        function initializeApp() {
+            try {
+                populateFilters();
+                generateCalendar();
+                generateStats();
+                applyFilters();
+                checkUnassigned();
+                checkFullGroups();
+                checkIncompatibilidades();
+                showAllStudents();
+                showAllGroups();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Modales
+        function openNewStudentModal() { document.getElementById('newStudentModal').style.display = 'block'; }
+        function closeNewStudentModal() { document.getElementById('newStudentModal').style.display = 'none'; document.getElementById('newStudentForm').reset(); }
+        function openNewGroupModal() { document.getElementById('newGroupModal').style.display = 'block'; }
+        function closeNewGroupModal() { document.getElementById('newGroupModal').style.display = 'none'; document.getElementById('newGroupForm').reset(); }
+        function openEditStudentModal() { document.getElementById('editStudentModal').style.display = 'block'; }
+        function closeEditStudentModal() { document.getElementById('editStudentModal').style.display = 'none'; }
+        function openUpdateModal() { document.getElementById('updateModal').style.display = 'block'; }
+        function closeUpdateModal() { document.getElementById('updateModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Alta estudiante
+        document.getElementById('newStudentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newStudent = {
+                'Unnamed: 0': allData.length + 1,
+                'Profesor': document.getElementById('altaProfesor').value,
+                'Sala': document.getElementById('altaSala').value,
+                'Nivel': document.getElementById('altaNivel').value,
+                'TIPO': document.getElementById('altaTipo').value,
+                'Días': document.getElementById('altaDias').value,
+                'Horas': document.getElementById('altaHoras').value,
+                'Alumnos': document.getElementById('altaAlumno').value,
+                'Confirmado': document.getElementById('altaConfirmado').value,
+                'Pagado': document.getElementById('altaPagado').value,
+                'E-mail': document.getElementById('altaEmail').value,
+                'Teléfono': document.getElementById('altaTelefono').value,
+                'Activo': document.getElementById('altaActivo').value
+            };
+
+            // Guardar en Airtable automáticamente
+                await guardarEnAirtable(newStudent);
+                // allData se actualizará automáticamente al recargar
+            initializeApp();
+            closeNewStudentModal();
+            alert(`✅ Estudiante dado de alta: ${newStudent.Alumnos}`);
+        });
 
         // Alta grupo
         document.getElementById('newGroupForm').addEventListener('submit', function(e) {
@@ -1645,7 +1731,9 @@ API_KEY: 'TU_API_KEY_AQUI'</pre>
                     'Teléfono': '',
                     'Activo': 'SÍ'
                 };
-                allData.push(newStudent);
+                // Guardar en Airtable automáticamente
+                await guardarEnAirtable(newStudent);
+                // allData se actualizará automáticamente al recargar
                 count++;
             });
 
@@ -2365,7 +2453,6 @@ API_KEY: 'TU_API_KEY_AQUI'</pre>
 
             container.innerHTML = html;
         }
-    
     </script>
 </body>
 </html>
