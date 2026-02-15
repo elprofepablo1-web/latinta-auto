@@ -1789,7 +1789,7 @@ Ana López"></textarea>
             openEditStudentModal();
         }
 
-        function deleteStudent(index) {
+        async function deleteStudent(index) {
             const student = allData[index];
             if (confirm(`¿Eliminar a ${student.Alumnos}?`)) {
                 allData.splice(index, 1);
