@@ -1467,164 +1467,13 @@ Ana López"></textarea>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-        
-        // ========================================
-        // FUNCIONES DE GUARDADO EN AIRTABLE
-        // ========================================
-        
-        async function guardarEnAirtable(estudiante) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const airtableData = {
-                    fields: {
-                        'ID': estudiante['Unnamed: 0'] || '',
-                        'Profesor': estudiante.Profesor || '',
-                        'Sala': estudiante.Sala || '',
-                        'Nivel': estudiante.Nivel || '',
-                        'TIPO': estudiante.TIPO || '',
-                        'Días': estudiante.Días || '',
-                        'Horas': estudiante.Horas || '',
-                        'Alumnos': estudiante.Alumnos || '',
-                        'Confirmado': estudiante.Confirmado || '',
-                        'Pagado': estudiante.Pagado || '',
-                        'E-mail': estudiante['E-mail'] || '',
-                        'Teléfono': estudiante.Teléfono || '',
-                        'Activo': 'SÍ',
-                        'COMENTARIO': estudiante.COMENTARIO || ''
-                    }
-                };
-                
-                const response = await fetch(AIRTABLE.URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(airtableData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al guardar');
-                }
-                
-                console.log('✅ Estudiante guardado en Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante guardado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error guardando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al guardar: ' + error.message);
-                return false;
-            }
-        }
-        
-        async function actualizarEnAirtable(airtableId, estudiante) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const airtableData = {
-                    fields: {
-                        'Profesor': estudiante.Profesor || '',
-                        'Sala': estudiante.Sala || '',
-                        'Nivel': estudiante.Nivel || '',
-                        'TIPO': estudiante.TIPO || '',
-                        'Días': estudiante.Días || '',
-                        'Horas': estudiante.Horas || '',
-                        'Alumnos': estudiante.Alumnos || '',
-                        'Confirmado': estudiante.Confirmado || '',
-                        'Pagado': estudiante.Pagado || '',
-                        'E-mail': estudiante['E-mail'] || '',
-                        'Teléfono': estudiante.Teléfono || '',
-                        'COMENTARIO': estudiante.COMENTARIO || ''
-                    }
-                };
-                
-                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
-                    method: 'PATCH',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(airtableData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al actualizar');
-                }
-                
-                console.log('✅ Estudiante actualizado en Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante actualizado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error actualizando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al actualizar: ' + error.message);
-                return false;
-            }
-        }
-        
-        async function eliminarDeAirtable(airtableId) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
-                    method: 'DELETE',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al eliminar');
-                }
-                
-                console.log('✅ Estudiante eliminado de Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante eliminado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error eliminando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al eliminar: ' + error.message);
-                return false;
-            }
-        }
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // ========================================
         // PROTECCIÓN CON CONTRASEÑA
         // ========================================
         (function() {
-            const CONTRASENA_CORRECTA = "LaTinta2026@";  // 👈 CAMBIA ESTA CONTRASEÑA
+            const CONTRASENA_CORRECTA = "LaTinta2026@";
             
             // Verificar si ya está autenticado en esta sesión
             if (sessionStorage.getItem('autenticado') !== 'true') {
@@ -1725,9 +1574,7 @@ Ana López"></textarea>
                 'Activo': document.getElementById('altaActivo').value
             };
 
-            // Guardar en Airtable
-                await guardarEnAirtable(newStudent);
-                // allData se actualiza al recargar desde Airtable
+            allData.push(newStudent);
             initializeApp();
             closeNewStudentModal();
             alert(`✅ Estudiante dado de alta: ${newStudent.Alumnos}`);
@@ -1768,9 +1615,7 @@ Ana López"></textarea>
                     'Teléfono': '',
                     'Activo': 'SÍ'
                 };
-                // Guardar en Airtable
-                await guardarEnAirtable(newStudent);
-                // allData se actualiza al recargar desde Airtable
+                allData.push(newStudent);
                 count++;
             });
 
@@ -1826,7 +1671,7 @@ Ana López"></textarea>
             openEditStudentModal();
         }
 
-        async function deleteStudent(index) {
+        function deleteStudent(index) {
             const student = allData[index];
             if (confirm(`¿Eliminar a ${student.Alumnos}?`)) {
                 allData.splice(index, 1);
@@ -2559,157 +2404,6 @@ Ana López"></textarea>
                 if (loading) loading.style.display = 'none';
             }
         })();
-
-        
-        // ========================================
-        // FUNCIONES DE GUARDADO EN AIRTABLE
-        // ========================================
-        
-        async function guardarEnAirtable(estudiante) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const airtableData = {
-                    fields: {
-                        'ID': estudiante['Unnamed: 0'] || '',
-                        'Profesor': estudiante.Profesor || '',
-                        'Sala': estudiante.Sala || '',
-                        'Nivel': estudiante.Nivel || '',
-                        'TIPO': estudiante.TIPO || '',
-                        'Días': estudiante.Días || '',
-                        'Horas': estudiante.Horas || '',
-                        'Alumnos': estudiante.Alumnos || '',
-                        'Confirmado': estudiante.Confirmado || '',
-                        'Pagado': estudiante.Pagado || '',
-                        'E-mail': estudiante['E-mail'] || '',
-                        'Teléfono': estudiante.Teléfono || '',
-                        'Activo': 'SÍ',
-                        'COMENTARIO': estudiante.COMENTARIO || ''
-                    }
-                };
-                
-                const response = await fetch(AIRTABLE.URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(airtableData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al guardar');
-                }
-                
-                console.log('✅ Estudiante guardado en Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante guardado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error guardando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al guardar: ' + error.message);
-                return false;
-            }
-        }
-        
-        async function actualizarEnAirtable(airtableId, estudiante) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const airtableData = {
-                    fields: {
-                        'Profesor': estudiante.Profesor || '',
-                        'Sala': estudiante.Sala || '',
-                        'Nivel': estudiante.Nivel || '',
-                        'TIPO': estudiante.TIPO || '',
-                        'Días': estudiante.Días || '',
-                        'Horas': estudiante.Horas || '',
-                        'Alumnos': estudiante.Alumnos || '',
-                        'Confirmado': estudiante.Confirmado || '',
-                        'Pagado': estudiante.Pagado || '',
-                        'E-mail': estudiante['E-mail'] || '',
-                        'Teléfono': estudiante.Teléfono || '',
-                        'COMENTARIO': estudiante.COMENTARIO || ''
-                    }
-                };
-                
-                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
-                    method: 'PATCH',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(airtableData)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al actualizar');
-                }
-                
-                console.log('✅ Estudiante actualizado en Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante actualizado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error actualizando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al actualizar: ' + error.message);
-                return false;
-            }
-        }
-        
-        async function eliminarDeAirtable(airtableId) {
-            try {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'flex';
-                
-                const response = await fetch(`${AIRTABLE.URL}/${airtableId}`, {
-                    method: 'DELETE',
-                    headers: { 
-                        'Authorization': `Bearer ${AIRTABLE.TOKEN}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al eliminar');
-                }
-                
-                console.log('✅ Estudiante eliminado de Airtable');
-                
-                // Recargar datos
-                await cargarDatosAirtable();
-                
-                if (loading) loading.style.display = 'none';
-                alert('✅ Estudiante eliminado correctamente');
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error eliminando:', error);
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-                alert('❌ Error al eliminar: ' + error.message);
-                return false;
-            }
-        }
-
-    </script>
+</script>
 </body>
 </html>
